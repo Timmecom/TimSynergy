@@ -1,4 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.Azure.Cosmos;
+using TimSynergy.API.Services;
 
 namespace TimSynergy.API
 {
@@ -31,6 +33,9 @@ namespace TimSynergy.API
                     options.Authority = "https://login.microsoftonline.com/{tenantId}/v2.0";
                     options.Audience = "api://TimSynergy";
                 });
+
+            // Configure Cosmos DB
+            builder.Services.AddSingleton(InitializeCosmosClientInstanceAsync(builder.Configuration).GetAwaiter().GetResult());
 
             var app = builder.Build();
 
@@ -68,6 +73,37 @@ namespace TimSynergy.API
             .WithName("GetWeatherForecast");
 
             app.Run();
+        }
+
+        private static async Task<ICosmosDbService> InitializeCosmosClientInstanceAsync(IConfiguration configuration)
+        {
+            string databaseName = configuration["CosmosDb:DatabaseName"] ?? "TimSynergyDB";
+            
+            try
+            {
+                string account = configuration["CosmosDb:Endpoint"] ?? "https://localhost:8081";
+                string key = configuration["CosmosDb:Key"] ?? "C2y6yDjf5/R+ob0N8A7Cgv30VRDJIWEHLM+4QDU5DE2nQ9nDuVTqobD4b8mGGyPMbIZnqyMsEcaGQy67XIw/Jw==";
+                
+                CosmosClient client = new CosmosClient(account, key, new CosmosClientOptions
+                {
+                    ConnectionMode = ConnectionMode.Gateway,
+                    ServerCertificateCustomValidationCallback = (_, __, ___, ____) => true
+                });
+                
+                DatabaseResponse database = await client.CreateDatabaseIfNotExistsAsync(databaseName);
+                await database.Database.CreateContainerIfNotExistsAsync("Customers", "/id");
+                await database.Database.CreateContainerIfNotExistsAsync("Interactions", "/id");
+                
+                return new CosmosDbService(client, databaseName);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Failed to connect to CosmosDB: {ex.Message}");
+                Console.WriteLine("Using in-memory data service for development...");
+                
+                // Return an in-memory implementation for development
+                return new InMemoryCosmosDbService();
+            }
         }
     }
 
