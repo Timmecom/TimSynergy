@@ -1,0 +1,6 @@
+@TimSynergy.API_HostAddress = http://localhost:5130
+
+GET {{TimSynergy.API_HostAddress}}/weatherforecast/
+Accept: application/json
+
+###
