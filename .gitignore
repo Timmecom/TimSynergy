@@ -1,0 +1,38 @@
+# .NET Core
+bin/
+obj/
+*.user
+*.userosscache
+*.suo
+*.dbmdl
+*.jfm
+*.dbproj.schemaview
+_ReSharper*/
+*.pfx
+*.publishsettings
+
+# Vue.js / Node
+node_modules/
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+/dist/
+.cache/
+.env.local
+.env.*.local
+
+# IDE files
+.vs/
+.vscode/
+.idea/
+*.sln.iml
+
+# Azure
+.azure/
+
+# Project-specific files
+PRJ-BREAKDOWN.txt
+
+# Misc
+.DS_Store
+Thumbs.db
